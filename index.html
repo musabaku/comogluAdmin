@@ -11,6 +11,9 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 
+    <!-- SheetJS (xlsx) for Excel Export -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+
     <style>
         body { font-family: 'Inter', sans-serif; }
         /* Simple transition for modals and views */
@@ -72,7 +75,12 @@
 
         <main class="container mx-auto p-4 sm:p-6 lg:p-8">
             <div class="bg-white p-6 rounded-2xl shadow-lg">
-                <h2 class="text-xl font-semibold mb-4">Recent Orders</h2>
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-xl font-semibold">Recent Orders</h2>
+                    <button id="export-all-btn" class="text-sm font-semibold text-white bg-green-600 hover:bg-green-700 px-4 py-2 rounded-md transition disabled:opacity-50" disabled>
+                        Export All to Excel
+                    </button>
+                </div>
                 <div class="overflow-x-auto">
                     <table class="min-w-full divide-y divide-slate-200">
                         <thead class="bg-slate-50">
@@ -102,6 +110,11 @@
             <div class="p-6 overflow-y-auto" id="modal-body">
                 <!-- Modal content will be injected here -->
             </div>
+            <div class="p-4 border-t bg-slate-50 text-right">
+                <button id="export-single-btn" class="text-sm font-semibold text-white bg-green-600 hover:bg-green-700 px-4 py-2 rounded-md transition">
+                    Export this Order to Excel
+                </button>
+            </div>
         </div>
     </div>
 
@@ -122,6 +135,9 @@
         const auth = getAuth(app);
         const db = getFirestore(app);
 
+        // --- Global State ---
+        let allOrders = [];
+
         // --- DOM Elements ---
         const loginView = document.getElementById('login-view');
         const adminPanel = document.getElementById('admin-panel');
@@ -133,16 +149,16 @@
         const closeModalBtn = document.getElementById('close-modal-btn');
         const modalTitle = document.getElementById('modal-title');
         const modalBody = document.getElementById('modal-body');
+        const exportAllBtn = document.getElementById('export-all-btn');
+        const exportSingleBtn = document.getElementById('export-single-btn');
 
         // --- Authentication Logic ---
         onAuthStateChanged(auth, (user) => {
             if (user) {
-                // User is signed in
                 loginView.classList.add('view-hidden');
                 adminPanel.classList.remove('view-hidden');
                 fetchAndDisplayOrders();
             } else {
-                // User is signed out
                 loginView.classList.remove('view-hidden');
                 adminPanel.classList.add('view-hidden');
             }
@@ -171,11 +187,13 @@
                 const ordersCollectionPath = `/artifacts/${appId}/public/data/orders`;
                 const ordersCollectionRef = collection(db, ordersCollectionPath);
                 const q = query(ordersCollectionRef, orderBy('createdAt', 'desc')); // Newest first
-
                 const querySnapshot = await getDocs(q);
                 
+                allOrders = []; // Reset the global orders array
+
                 if (querySnapshot.empty) {
                     ordersTableBody.innerHTML = `<tr><td colspan="5" class="text-center p-8 text-slate-500">No orders found.</td></tr>`;
+                    exportAllBtn.disabled = true;
                     return;
                 }
 
@@ -184,6 +202,7 @@
                 querySnapshot.forEach(doc => {
                     const order = doc.data();
                     order.id = doc.id; // Keep track of the document ID
+                    allOrders.push(order); // Store order for global export
                     
                     const tr = document.createElement('tr');
                     tr.className = "hover:bg-slate-50";
@@ -200,12 +219,15 @@
                         </td>
                     `;
                     
-                    // Attach data and event listener to the button
                     const viewBtn = tr.querySelector('.view-details-btn');
                     viewBtn.addEventListener('click', () => showOrderDetails(order));
                     
                     ordersTableBody.appendChild(tr);
                 });
+
+                if (allOrders.length > 0) {
+                    exportAllBtn.disabled = false;
+                }
 
             } catch (error) {
                 console.error("Error fetching orders: ", error);
@@ -240,13 +262,67 @@
             itemsHtml += `</tbody></table>`;
             modalBody.innerHTML = itemsHtml;
             
+            exportSingleBtn.onclick = () => exportIndividualOrderToExcel(order);
             detailsModal.classList.remove('opacity-0', 'pointer-events-none');
         }
         
         closeModalBtn.addEventListener('click', () => {
             detailsModal.classList.add('opacity-0', 'pointer-events-none');
         });
+
+        // --- Excel Export Logic ---
+        function exportIndividualOrderToExcel(order) {
+            const companyName = order.companyName;
+            const worksheetData = [
+                ["Company Name:", companyName],
+                ["Phone Number:", order.phoneNumber],
+                ["Date:", order.createdAt?.toDate ? order.createdAt.toDate().toLocaleString('tr-TR') : 'N/A'],
+                [],
+                ["Product Name", "Quantity", "Unit Price (TL)", "Total (TL)"]
+            ];
+
+            Object.values(order.cart).forEach(item => {
+                const unitPrice = (item.koliFiyat && item.koliFiyat > 0) ? item.koliFiyat : item.price;
+                const itemTotal = unitPrice * item.quantity;
+                worksheetData.push([item.name, item.quantity, unitPrice.toFixed(2), itemTotal.toFixed(2)]);
+            });
+
+            worksheetData.push([], ["", "", "Grand Total:", order.total.toFixed(2)]);
+            
+            const ws = XLSX.utils.aoa_to_sheet(worksheetData);
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, "Order Details");
+            XLSX.writeFile(wb, `Order_${companyName.replace(/\s+/g, '_')}.xlsx`);
+        }
+
+        function exportAllOrdersToExcel() {
+            const worksheetData = [
+                ["Order ID", "Company Name", "Phone", "Order Date", "Product Name", "Quantity", "Unit Price (TL)", "Subtotal (TL)"]
+            ];
+
+            allOrders.forEach(order => {
+                const orderDate = order.createdAt?.toDate ? order.createdAt.toDate().toLocaleString('tr-TR') : 'N/A';
+                for (const itemId in order.cart) {
+                    const item = order.cart[itemId];
+                    const unitPrice = (item.koliFiyat && item.koliFiyat > 0) ? item.koliFiyat : item.price;
+                    const subtotal = item.quantity * unitPrice;
+                    worksheetData.push([
+                        order.id, order.companyName, order.phoneNumber, orderDate,
+                        item.name, item.quantity, unitPrice.toFixed(2), subtotal.toFixed(2)
+                    ]);
+                }
+            });
+
+            const ws = XLSX.utils.aoa_to_sheet(worksheetData);
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, "All Orders");
+            const date = new Date().toISOString().slice(0, 10); // YYYY-MM-DD
+            XLSX.writeFile(wb, `All_Orders_${date}.xlsx`);
+        }
+        
+        exportAllBtn.addEventListener('click', exportAllOrdersToExcel);
         
     </script>
 </body>
 </html>
+
