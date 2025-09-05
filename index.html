@@ -41,6 +41,16 @@
         ::-webkit-scrollbar-thumb:hover {
             background: #64748b;
         }
+        .collapsible-content {
+            max-height: 1000px; /* Adjust as needed for content */
+            transition: max-height 0.5s ease-in-out, padding 0.5s ease-in-out;
+            overflow: hidden;
+        }
+        .collapsible-content.collapsed {
+            max-height: 0;
+            padding-top: 0;
+            padding-bottom: 0;
+        }
     </style>
 </head>
 <body class="bg-slate-50 text-slate-800 antialiased">
@@ -115,13 +125,12 @@
         <!-- Main Content -->
         <div class="flex-1 flex flex-col">
             <header class="bg-white shadow-sm border-b border-slate-200">
-                <div class="container mx-auto px-4 sm:px-6 lg:px-8">
-                    <div class="flex justify-between items-center h-16">
-                        <h1 class="text-2xl font-bold text-slate-900">Order Dashboard</h1>
-                        <div class="text-sm text-slate-500">
-                            Welcome, Admin!
-                        </div>
-                    </div>
+                <div class="container mx-auto px-4 sm:px-6 lg:px-8 flex justify-between items-center h-16">
+                    <h1 class="text-2xl font-bold text-slate-900">Order Dashboard</h1>
+                    <button id="export-all-btn" class="flex items-center text-sm font-semibold text-white bg-green-600 hover:bg-green-700 px-4 py-2.5 rounded-lg transition disabled:opacity-50 disabled:cursor-not-allowed">
+                        <svg class="mr-2 h-4 w-4" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg>
+                        Export All to Excel
+                    </button>
                 </div>
             </header>
 
@@ -131,31 +140,55 @@
                     <!-- Cards will be injected here -->
                 </div>
                 
-                <!-- Orders Table -->
-                <div class="bg-white p-6 rounded-2xl shadow-lg">
-                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6">
-                        <h2 class="text-xl font-semibold mb-3 sm:mb-0">Recent Orders</h2>
-                        <button id="export-all-btn" class="flex items-center text-sm font-semibold text-white bg-green-600 hover:bg-green-700 px-4 py-2.5 rounded-lg transition disabled:opacity-50 disabled:cursor-not-allowed">
-                            <svg class="mr-2 h-4 w-4" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg>
-                            Export All to Excel
-                        </button>
+                <div class="space-y-6">
+                    <!-- Pending Orders Section -->
+                    <div class="bg-white rounded-2xl shadow-lg overflow-hidden">
+                        <div id="pending-header" class="p-4 sm:p-6 cursor-pointer flex justify-between items-center border-b hover:bg-slate-50 transition">
+                            <h2 class="text-xl font-semibold">Pending Orders <span id="pending-count" class="text-base font-medium text-slate-500"></span></h2>
+                            <svg id="pending-chevron" class="h-6 w-6 text-slate-500 transition-transform" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                        </div>
+                        <div id="pending-content" class="collapsible-content">
+                            <div class="overflow-x-auto">
+                                <table class="min-w-full">
+                                    <thead class="bg-slate-50">
+                                        <tr>
+                                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Company</th>
+                                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Phone</th>
+                                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Order Total</th>
+                                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Date</th>
+                                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Status</th>
+                                            <th scope="col" class="relative px-6 py-3"><span class="sr-only">Actions</span></th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="pending-orders-table-body" class="divide-y divide-slate-200"></tbody>
+                                </table>
+                            </div>
+                        </div>
                     </div>
-                    <div class="overflow-x-auto">
-                        <table class="min-w-full divide-y divide-slate-200">
-                            <thead class="bg-slate-50">
-                                <tr>
-                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Company</th>
-                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Phone</th>
-                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Order Total</th>
-                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Date</th>
-                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Status</th>
-                                    <th scope="col" class="relative px-6 py-3"><span class="sr-only">Actions</span></th>
-                                </tr>
-                            </thead>
-                            <tbody id="orders-table-body" class="bg-white divide-y divide-slate-200">
-                                <!-- Loading/Data Rows will be injected here -->
-                            </tbody>
-                        </table>
+
+                    <!-- Processed Orders Section -->
+                     <div class="bg-white rounded-2xl shadow-lg overflow-hidden">
+                        <div id="processed-header" class="p-4 sm:p-6 cursor-pointer flex justify-between items-center border-b hover:bg-slate-50 transition">
+                            <h2 class="text-xl font-semibold">Processed Orders <span id="processed-count" class="text-base font-medium text-slate-500"></span></h2>
+                            <svg id="processed-chevron" class="h-6 w-6 text-slate-500 transition-transform" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                        </div>
+                        <div id="processed-content" class="collapsible-content collapsed">
+                            <div class="overflow-x-auto">
+                                <table class="min-w-full">
+                                      <thead class="bg-slate-50">
+                                        <tr>
+                                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Company</th>
+                                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Phone</th>
+                                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Order Total</th>
+                                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Date</th>
+                                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Status</th>
+                                            <th scope="col" class="relative px-6 py-3"><span class="sr-only">Actions</span></th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="processed-orders-table-body" class="divide-y divide-slate-200"></tbody>
+                                </table>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </main>
@@ -207,7 +240,6 @@
         const loginForm = document.getElementById('login-form');
         const loginErrorEl = document.getElementById('login-error');
         const logoutBtn = document.getElementById('logout-btn');
-        const ordersTableBody = document.getElementById('orders-table-body');
         const detailsModal = document.getElementById('details-modal');
         const closeModalBtn = document.getElementById('close-modal-btn');
         const modalTitle = document.getElementById('modal-title');
@@ -215,6 +247,17 @@
         const exportAllBtn = document.getElementById('export-all-btn');
         const exportSingleBtn = document.getElementById('export-single-btn');
         const statsCardsContainer = document.getElementById('stats-cards');
+        const pendingHeader = document.getElementById('pending-header');
+        const pendingContent = document.getElementById('pending-content');
+        const pendingChevron = document.getElementById('pending-chevron');
+        const pendingCountEl = document.getElementById('pending-count');
+        const pendingOrdersTableBody = document.getElementById('pending-orders-table-body');
+        const processedHeader = document.getElementById('processed-header');
+        const processedContent = document.getElementById('processed-content');
+        const processedChevron = document.getElementById('processed-chevron');
+        const processedCountEl = document.getElementById('processed-count');
+        const processedOrdersTableBody = document.getElementById('processed-orders-table-body');
+
 
         // --- Authentication Logic ---
         onAuthStateChanged(auth, (user) => {
@@ -246,16 +289,29 @@
         logoutBtn.addEventListener('click', () => {
             signOut(auth);
         });
+
+        // --- Collapsible Sections Logic ---
+        pendingHeader.addEventListener('click', () => {
+            pendingContent.classList.toggle('collapsed');
+            pendingChevron.classList.toggle('rotate-180');
+        });
+
+        processedHeader.addEventListener('click', () => {
+            processedContent.classList.toggle('collapsed');
+            processedChevron.classList.toggle('rotate-180');
+        });
         
         // --- Loading State ---
         function showLoading() {
-             ordersTableBody.innerHTML = `<tr><td colspan="6" class="text-center p-8">
+            const loadingHtml = `<tr><td colspan="6" class="text-center p-8">
                 <div class="flex justify-center items-center space-x-2">
                     <div class="w-4 h-4 rounded-full animate-pulse bg-indigo-600"></div>
                     <div class="w-4 h-4 rounded-full animate-pulse bg-indigo-600" style="animation-delay: 0.2s;"></div>
                     <div class="w-4 h-4 rounded-full animate-pulse bg-indigo-600" style="animation-delay: 0.4s;"></div>
                 </div>
             </td></tr>`;
+            pendingOrdersTableBody.innerHTML = loadingHtml;
+            processedOrdersTableBody.innerHTML = loadingHtml;
             exportAllBtn.disabled = true;
         }
 
@@ -265,11 +321,10 @@
             try {
                 const ordersCollectionPath = `/artifacts/${appId}/public/data/orders`;
                 const ordersCollectionRef = collection(db, ordersCollectionPath);
-                // Removed orderBy to avoid needing a composite index. Sorting is now done client-side.
                 const q = query(ordersCollectionRef); 
                 const querySnapshot = await getDocs(q);
                 
-                allOrders = []; // Reset the global orders array
+                allOrders = []; 
 
                 querySnapshot.forEach(doc => {
                     const order = doc.data();
@@ -277,20 +332,58 @@
                     allOrders.push(order);
                 });
 
-                // Sort orders by date client-side (newest first)
-                allOrders.sort((a, b) => {
-                    const dateA = a.createdAt?.toMillis() || 0;
-                    const dateB = b.createdAt?.toMillis() || 0;
-                    return dateB - dateA;
-                });
+                allOrders.sort((a, b) => (b.createdAt?.toMillis() || 0) - (a.createdAt?.toMillis() || 0));
 
                 renderStats();
                 renderOrders();
 
             } catch (error) {
                 console.error("Error fetching orders: ", error);
-                ordersTableBody.innerHTML = `<tr><td colspan="6" class="text-center p-8 text-red-500">Failed to load orders. Please try again.</td></tr>`;
+                const errorHtml = `<tr><td colspan="6" class="text-center p-8 text-red-500">Failed to load orders. Please try again.</td></tr>`;
+                pendingOrdersTableBody.innerHTML = errorHtml;
+                processedOrdersTableBody.innerHTML = errorHtml;
             }
+        }
+        
+        function createOrderRow(order) {
+            const tr = document.createElement('tr');
+            tr.className = "hover:bg-slate-50 transition-colors";
+
+            const orderDate = order.createdAt?.toDate ? order.createdAt.toDate().toLocaleString('tr-TR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : 'N/A';
+            const status = order.status || 'pending';
+
+            const statusClasses = {
+                pending: 'bg-yellow-100 text-yellow-800 border-yellow-200',
+                processed: 'bg-teal-100 text-teal-800 border-teal-200',
+            };
+            
+            tr.innerHTML = `
+                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-slate-900">${order.companyName}</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-500">${order.phoneNumber}</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-500 font-semibold">${order.total.toLocaleString('tr-TR', { style: 'currency', currency: 'TRY' })}</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-500">${orderDate}</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm">
+                     <select data-order-id="${order.id}" class="status-select text-xs font-semibold rounded-full px-3 py-1 border focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors ${statusClasses[status]}">
+                        <option value="pending" ${status === 'pending' ? 'selected' : ''}>Pending</option>
+                        <option value="processed" ${status === 'processed' ? 'selected' : ''}>Processed</option>
+                    </select>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                    <button class="view-details-btn text-indigo-600 hover:text-indigo-900 font-semibold">View Details</button>
+                </td>
+            `;
+            
+            const viewBtn = tr.querySelector('.view-details-btn');
+            viewBtn.addEventListener('click', () => showOrderDetails(order));
+
+            const statusSelect = tr.querySelector('.status-select');
+            statusSelect.addEventListener('change', (e) => {
+                const newStatus = e.target.value;
+                const orderId = e.target.dataset.orderId;
+                updateOrderStatus(orderId, newStatus);
+            });
+            
+            return tr;
         }
 
         // --- Data Rendering ---
@@ -300,21 +393,9 @@
             const averageOrderValue = totalOrders > 0 ? totalRevenue / totalOrders : 0;
 
             const stats = [
-                { 
-                    label: 'Total Revenue', 
-                    value: `${totalRevenue.toLocaleString('tr-TR', { style: 'currency', currency: 'TRY' })}`, 
-                    icon: `<svg class="h-8 w-8 text-green-500" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" x2="12" y1="2" y2="22"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>`
-                },
-                { 
-                    label: 'Total Orders', 
-                    value: totalOrders, 
-                    icon: `<svg class="h-8 w-8 text-blue-500" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>` 
-                },
-                { 
-                    label: 'Average Order', 
-                    value: `${averageOrderValue.toLocaleString('tr-TR', { style: 'currency', currency: 'TRY' })}`, 
-                    icon: `<svg class="h-8 w-8 text-yellow-500" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10h-6"/><path d="m21 16-4-4 4-4"/><path d="M3 6h12"/><path d="M3 12h12"/><path d="M3 18h12"/></svg>` 
-                }
+                { label: 'Total Revenue', value: `${totalRevenue.toLocaleString('tr-TR', { style: 'currency', currency: 'TRY' })}`, icon: `<svg class="h-8 w-8 text-green-500" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" x2="12" y1="2" y2="22"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>`},
+                { label: 'Total Orders', value: totalOrders, icon: `<svg class="h-8 w-8 text-blue-500" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>` },
+                { label: 'Average Order', value: `${averageOrderValue.toLocaleString('tr-TR', { style: 'currency', currency: 'TRY' })}`, icon: `<svg class="h-8 w-8 text-yellow-500" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10h-6"/><path d="m21 16-4-4 4-4"/><path d="M3 6h12"/><path d="M3 12h12"/><path d="M3 18h12"/></svg>`}
             ];
 
             statsCardsContainer.innerHTML = stats.map(stat => `
@@ -323,77 +404,34 @@
                         <p class="text-sm font-medium text-slate-500">${stat.label}</p>
                         <p class="text-3xl font-bold text-slate-900 mt-1">${stat.value}</p>
                     </div>
-                    <div class="bg-slate-100 p-4 rounded-full">
-                        ${stat.icon}
-                    </div>
+                    <div class="bg-slate-100 p-4 rounded-full">${stat.icon}</div>
                 </div>
             `).join('');
         }
 
         function renderOrders() {
-            if (allOrders.length === 0) {
-                ordersTableBody.innerHTML = `<tr><td colspan="6" class="text-center p-8 text-slate-500">No orders found.</td></tr>`;
-                exportAllBtn.disabled = true;
-                return;
+            const pendingOrders = allOrders.filter(o => (o.status || 'pending') === 'pending');
+            const processedOrders = allOrders.filter(o => o.status === 'processed');
+
+            pendingCountEl.textContent = `(${pendingOrders.length})`;
+            processedCountEl.textContent = `(${processedOrders.length})`;
+
+            pendingOrdersTableBody.innerHTML = '';
+            processedOrdersTableBody.innerHTML = '';
+
+            if (pendingOrders.length === 0) {
+                pendingOrdersTableBody.innerHTML = `<tr><td colspan="6" class="text-center p-8 text-slate-500">No pending orders.</td></tr>`;
+            } else {
+                pendingOrders.forEach(order => pendingOrdersTableBody.appendChild(createOrderRow(order)));
             }
 
-            ordersTableBody.innerHTML = ''; // Clear table
+            if (processedOrders.length === 0) {
+                processedOrdersTableBody.innerHTML = `<tr><td colspan="6" class="text-center p-8 text-slate-500">No processed orders.</td></tr>`;
+            } else {
+                processedOrders.forEach(order => processedOrdersTableBody.appendChild(createOrderRow(order)));
+            }
             
-            allOrders.forEach(order => {
-                const tr = document.createElement('tr');
-                tr.className = "hover:bg-slate-50 transition-colors";
-
-                const orderDate = order.createdAt?.toDate ? order.createdAt.toDate().toLocaleString('tr-TR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : 'N/A';
-                const status = order.status || 'pending';
-
-                const statusOptions = `
-                    <option value="pending" ${status === 'pending' ? 'selected' : ''}>Pending</option>
-                    <option value="processed" ${status === 'processed' ? 'selected' : ''}>Processed</option>
-                `;
-                
-                const statusClasses = {
-                    pending: 'bg-yellow-100 text-yellow-800 border-yellow-200',
-                    processed: 'bg-green-100 text-green-800 border-green-200',
-                };
-                
-                tr.innerHTML = `
-                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-slate-900">${order.companyName}</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-500">${order.phoneNumber}</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-500 font-semibold">${order.total.toLocaleString('tr-TR', { style: 'currency', currency: 'TRY' })}</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-500">${orderDate}</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm">
-                         <select data-order-id="${order.id}" class="status-select text-xs font-semibold rounded-full px-3 py-1 border focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors ${statusClasses[status]}">
-                            ${statusOptions}
-                        </select>
-                    </td>
-                    <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                        <button class="view-details-btn text-indigo-600 hover:text-indigo-900 font-semibold">View Details</button>
-                    </td>
-                `;
-                
-                const viewBtn = tr.querySelector('.view-details-btn');
-                viewBtn.addEventListener('click', () => showOrderDetails(order));
-                
-                ordersTableBody.appendChild(tr);
-
-                const statusSelect = tr.querySelector('.status-select');
-                statusSelect.addEventListener('change', (e) => {
-                    const newStatus = e.target.value;
-                    const orderId = e.target.dataset.orderId;
-                    
-                    // Update the select element's class to reflect the new status color immediately
-                    e.target.className = 'status-select text-xs font-semibold rounded-full px-3 py-1 border focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors ';
-                    e.target.classList.add(...statusClasses[newStatus].split(' '));
-
-                    updateOrderStatus(orderId, newStatus);
-                });
-
-            });
-
-            // Re-enable the 'View Details' buttons functionality here if needed, or ensure it is handled within the loop.
-            // The current implementation correctly handles it inside the loop.
-
-            exportAllBtn.disabled = false;
+            exportAllBtn.disabled = allOrders.length === 0;
         }
 
         // --- UI Logic for Modal ---
@@ -466,9 +504,10 @@
                 if (orderInState) {
                     orderInState.status = newStatus;
                 }
+                renderOrders(); // Re-render tables to move the order
             } catch (error) {
                 console.error("Error updating order status: ", error);
-                // Revert UI on failure by refetching
+                // Revert UI on failure by refetching all data
                 fetchAndDisplayOrders(); 
             }
         }
@@ -493,7 +532,6 @@
             worksheetData.push([], ["", "", "Grand Total:", order.total.toFixed(2)]);
             
             const ws = XLSX.utils.aoa_to_sheet(worksheetData);
-            // Set column widths
             ws['!cols'] = [{wch:30}, {wch:10}, {wch:15}, {wch:15}]; 
             const wb = XLSX.utils.book_new();
             XLSX.utils.book_append_sheet(wb, ws, "Order Details");
@@ -502,27 +540,28 @@
 
         function exportAllOrdersToExcel() {
             const worksheetData = [
-                ["Order ID", "Company Name", "Phone", "Order Date", "Product Name", "Quantity", "Unit Price (TL)", "Subtotal (TL)"]
+                ["Order ID", "Company Name", "Phone", "Order Date", "Status", "Product Name", "Quantity", "Unit Price (TL)", "Subtotal (TL)"]
             ];
 
             allOrders.forEach(order => {
                 const orderDate = order.createdAt?.toDate ? order.createdAt.toDate().toLocaleString('tr-TR') : 'N/A';
+                const status = order.status || 'pending';
                 for (const itemId in order.cart) {
                     const item = order.cart[itemId];
                     const unitPrice = (item.koliFiyat && item.koliFiyat > 0) ? item.koliFiyat : item.price;
                     const subtotal = item.quantity * unitPrice;
                     worksheetData.push([
-                        order.id, order.companyName, order.phoneNumber, orderDate,
+                        order.id, order.companyName, order.phoneNumber, orderDate, status.charAt(0).toUpperCase() + status.slice(1),
                         item.name, item.quantity, unitPrice.toFixed(2), subtotal.toFixed(2)
                     ]);
                 }
             });
 
             const ws = XLSX.utils.aoa_to_sheet(worksheetData);
-            ws['!cols'] = [{wch:25}, {wch:25}, {wch:15}, {wch:20}, {wch:30}, {wch:10}, {wch:15}, {wch:15}];
+            ws['!cols'] = [{wch:25}, {wch:25}, {wch:15}, {wch:20}, {wch:10}, {wch:30}, {wch:10}, {wch:15}, {wch:15}];
             const wb = XLSX.utils.book_new();
             XLSX.utils.book_append_sheet(wb, ws, "All Orders");
-            const date = new Date().toISOString().slice(0, 10); // YYYY-MM-DD
+            const date = new Date().toISOString().slice(0, 10);
             XLSX.writeFile(wb, `All_Orders_${date}.xlsx`);
         }
         
