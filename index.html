@@ -9,50 +9,73 @@
     
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
     <!-- SheetJS (xlsx) for Excel Export -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 
     <style>
         body { font-family: 'Inter', sans-serif; }
-        /* Simple transition for modals and views */
         .view-hidden { display: none; }
         .modal-overlay {
             transition: opacity 0.3s ease-in-out;
         }
+        .modal-content {
+            transition: opacity 0.3s ease-in-out, transform 0.3s ease-in-out;
+        }
+        .modal-overlay.opacity-0 .modal-content {
+            transform: scale(0.95);
+        }
+        /* Custom scrollbar for a cleaner look */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f5f9;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #94a3b8;
+            border-radius: 10px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #64748b;
+        }
     </style>
 </head>
-<body class="bg-slate-100 text-slate-800">
+<body class="bg-slate-50 text-slate-800 antialiased">
 
+    <!-- LOGIN VIEW -->
     <div id="login-view">
-        <div class="min-h-screen flex items-center justify-center">
+        <div class="min-h-screen flex items-center justify-center bg-slate-100 px-4">
             <div class="max-w-md w-full bg-white p-8 rounded-2xl shadow-lg">
                 <div class="text-center mb-8">
-                    <img src="https://i.ibb.co/7d57gNYf/Clean_Shot-14-08-2025-at-2-11-43-2x.png" alt="Company Logo" class="mx-auto h-16 w-auto">
-                    <h2 class="mt-4 text-3xl font-bold tracking-tight text-slate-900">
-                        Admin Login
+                    <div class="inline-block bg-indigo-600 p-3 rounded-xl mb-4">
+                         <svg class="h-8 w-8 text-white" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2H2v10l9.29 9.29a1 1 0 0 0 1.41 0l10-10a1 1 0 0 0 0-1.41L12 2z"></path><path d="M7 7h.01"></path></svg>
+                    </div>
+                    <h2 class="mt-2 text-3xl font-bold tracking-tight text-slate-900">
+                        Admin Dashboard
                     </h2>
                     <p class="mt-2 text-sm text-slate-600">
-                        Access the order dashboard
+                        Please sign in to access the order dashboard.
                     </p>
                 </div>
                 <form id="login-form" class="space-y-6">
                     <div>
                         <label for="email" class="block text-sm font-medium text-slate-700">Email address</label>
                         <div class="mt-1">
-                            <input id="email" name="email" type="email" autocomplete="email" required class="w-full px-3 py-2 border border-slate-300 rounded-md shadow-sm placeholder-slate-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
+                            <input id="email" name="email" type="email" autocomplete="email" required class="w-full px-4 py-2.5 border border-slate-300 rounded-lg shadow-sm placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition">
                         </div>
                     </div>
                     <div>
                         <label for="password" class="block text-sm font-medium text-slate-700">Password</label>
                         <div class="mt-1">
-                            <input id="password" name="password" type="password" autocomplete="current-password" required class="w-full px-3 py-2 border border-slate-300 rounded-md shadow-sm placeholder-slate-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
+                            <input id="password" name="password" type="password" autocomplete="current-password" required class="w-full px-4 py-2.5 border border-slate-300 rounded-lg shadow-sm placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition">
                         </div>
                     </div>
-                     <p id="login-error" class="text-sm text-red-600 h-4"></p>
+                     <p id="login-error" class="text-sm text-red-600 h-5"></p>
                     <div>
-                        <button type="submit" class="w-full flex justify-center py-3 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                        <button type="submit" class="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-transform transform hover:scale-105">
                             Sign in
                         </button>
                     </div>
@@ -61,58 +84,98 @@
         </div>
     </div>
 
-    <div id="admin-panel" class="view-hidden">
-        <header class="bg-white shadow-md sticky top-0 z-10">
-            <div class="container mx-auto px-4 sm:px-6 lg:px-8">
-                <div class="flex justify-between items-center py-4">
-                    <h1 class="text-2xl font-bold text-slate-900">Order Dashboard</h1>
-                    <button id="logout-btn" class="text-sm font-semibold text-white bg-red-600 hover:bg-red-700 px-4 py-2 rounded-md transition">
-                        Logout
-                    </button>
+    <!-- ADMIN PANEL VIEW -->
+    <div id="admin-panel" class="view-hidden flex min-h-screen">
+        <!-- Sidebar -->
+        <aside class="w-64 bg-white shadow-md flex flex-col">
+            <div class="flex items-center justify-center p-6 border-b">
+                 <div class="bg-indigo-600 p-2 rounded-lg">
+                    <svg class="h-7 w-7 text-white" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2H2v10l9.29 9.29a1 1 0 0 0 1.41 0l10-10a1 1 0 0 0 0-1.41L12 2z"></path><path d="M7 7h.01"></path></svg>
                 </div>
+                <h1 class="ml-3 text-xl font-bold text-slate-800">Price Catalog</h1>
             </div>
-        </header>
+            <nav class="flex-1 px-4 py-4">
+                <ul>
+                    <li>
+                        <a href="#" class="flex items-center px-4 py-2.5 text-sm font-medium bg-indigo-100 text-indigo-700 rounded-lg">
+                            <svg class="mr-3 h-5 w-5" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="14" x="2" y="7" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
+                            Orders
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+            <div class="p-4 border-t">
+                 <button id="logout-btn" class="w-full flex items-center justify-center px-4 py-2.5 text-sm font-medium text-slate-700 hover:bg-slate-100 rounded-lg transition">
+                    <svg class="mr-3 h-5 w-5" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" x2="9" y1="12" y2="12"/></svg>
+                    Logout
+                </button>
+            </div>
+        </aside>
 
-        <main class="container mx-auto p-4 sm:p-6 lg:p-8">
-            <div class="bg-white p-6 rounded-2xl shadow-lg">
-                <div class="flex justify-between items-center mb-4">
-                    <h2 class="text-xl font-semibold">Recent Orders</h2>
-                    <button id="export-all-btn" class="text-sm font-semibold text-white bg-green-600 hover:bg-green-700 px-4 py-2 rounded-md transition disabled:opacity-50" disabled>
-                        Export All to Excel
-                    </button>
+        <!-- Main Content -->
+        <div class="flex-1 flex flex-col">
+            <header class="bg-white shadow-sm border-b border-slate-200">
+                <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+                    <div class="flex justify-between items-center h-16">
+                        <h1 class="text-2xl font-bold text-slate-900">Order Dashboard</h1>
+                        <div class="text-sm text-slate-500">
+                            Welcome, Admin!
+                        </div>
+                    </div>
                 </div>
-                <div class="overflow-x-auto">
-                    <table class="min-w-full divide-y divide-slate-200">
-                        <thead class="bg-slate-50">
-                            <tr>
-                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Company</th>
-                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Phone</th>
-                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Order Total</th>
-                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Date</th>
-                                <th scope="col" class="relative px-6 py-3"><span class="sr-only">Details</span></th>
-                            </tr>
-                        </thead>
-                        <tbody id="orders-table-body" class="bg-white divide-y divide-slate-200">
-                            <tr><td colspan="5" class="text-center p-8 text-slate-500">Loading orders...</td></tr>
-                        </tbody>
-                    </table>
+            </header>
+
+            <main class="flex-1 container mx-auto p-4 sm:p-6 lg:p-8">
+                <!-- Stats Cards -->
+                <div id="stats-cards" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+                    <!-- Cards will be injected here -->
                 </div>
-            </div>
-        </main>
+                
+                <!-- Orders Table -->
+                <div class="bg-white p-6 rounded-2xl shadow-lg">
+                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6">
+                        <h2 class="text-xl font-semibold mb-3 sm:mb-0">Recent Orders</h2>
+                        <button id="export-all-btn" class="flex items-center text-sm font-semibold text-white bg-green-600 hover:bg-green-700 px-4 py-2.5 rounded-lg transition disabled:opacity-50 disabled:cursor-not-allowed">
+                            <svg class="mr-2 h-4 w-4" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg>
+                            Export All to Excel
+                        </button>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full divide-y divide-slate-200">
+                            <thead class="bg-slate-50">
+                                <tr>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Company</th>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Phone</th>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Order Total</th>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Date</th>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Status</th>
+                                    <th scope="col" class="relative px-6 py-3"><span class="sr-only">Actions</span></th>
+                                </tr>
+                            </thead>
+                            <tbody id="orders-table-body" class="bg-white divide-y divide-slate-200">
+                                <!-- Loading/Data Rows will be injected here -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </main>
+        </div>
     </div>
     
-    <div id="details-modal" class="modal-overlay fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 opacity-0 pointer-events-none">
-        <div class="bg-white rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] flex flex-col">
-            <div class="flex justify-between items-center p-4 border-b">
+    <!-- DETAILS MODAL -->
+    <div id="details-modal" class="modal-overlay fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center p-4 opacity-0 pointer-events-none">
+        <div class="modal-content bg-white rounded-xl shadow-xl w-full max-w-3xl max-h-[90vh] flex flex-col opacity-0 transform scale-95">
+            <div class="flex justify-between items-center p-5 border-b">
                 <h3 class="text-lg font-semibold" id="modal-title">Order Details</h3>
-                <button id="close-modal-btn" class="text-slate-500 hover:text-slate-800 text-2xl font-bold">&times;</button>
+                <button id="close-modal-btn" class="text-slate-400 hover:text-slate-800">&times;</button>
             </div>
             <div class="p-6 overflow-y-auto" id="modal-body">
                 <!-- Modal content will be injected here -->
             </div>
-            <div class="p-4 border-t bg-slate-50 text-right">
-                <button id="export-single-btn" class="text-sm font-semibold text-white bg-green-600 hover:bg-green-700 px-4 py-2 rounded-md transition">
-                    Export this Order to Excel
+            <div class="p-4 border-t bg-slate-50 flex justify-end rounded-b-xl">
+                <button id="export-single-btn" class="flex items-center text-sm font-semibold text-white bg-green-600 hover:bg-green-700 px-4 py-2 rounded-lg transition">
+                     <svg class="mr-2 h-4 w-4" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg>
+                    Export this Order
                 </button>
             </div>
         </div>
@@ -122,7 +185,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, collection, getDocs, query, orderBy } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getFirestore, collection, getDocs, query, doc, updateDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         // --- Configuration (Copied from your catalog app) ---
         const firebaseConfig = {
@@ -151,6 +214,7 @@
         const modalBody = document.getElementById('modal-body');
         const exportAllBtn = document.getElementById('export-all-btn');
         const exportSingleBtn = document.getElementById('export-single-btn');
+        const statsCardsContainer = document.getElementById('stats-cards');
 
         // --- Authentication Logic ---
         onAuthStateChanged(auth, (user) => {
@@ -161,6 +225,8 @@
             } else {
                 loginView.classList.remove('view-hidden');
                 adminPanel.classList.add('view-hidden');
+                allOrders = []; // Clear data on logout
+                renderOrders();
             }
         });
 
@@ -180,95 +246,232 @@
         logoutBtn.addEventListener('click', () => {
             signOut(auth);
         });
+        
+        // --- Loading State ---
+        function showLoading() {
+             ordersTableBody.innerHTML = `<tr><td colspan="6" class="text-center p-8">
+                <div class="flex justify-center items-center space-x-2">
+                    <div class="w-4 h-4 rounded-full animate-pulse bg-indigo-600"></div>
+                    <div class="w-4 h-4 rounded-full animate-pulse bg-indigo-600" style="animation-delay: 0.2s;"></div>
+                    <div class="w-4 h-4 rounded-full animate-pulse bg-indigo-600" style="animation-delay: 0.4s;"></div>
+                </div>
+            </td></tr>`;
+            exportAllBtn.disabled = true;
+        }
 
         // --- Firestore Data Fetching ---
         async function fetchAndDisplayOrders() {
+            showLoading();
             try {
                 const ordersCollectionPath = `/artifacts/${appId}/public/data/orders`;
                 const ordersCollectionRef = collection(db, ordersCollectionPath);
-                const q = query(ordersCollectionRef, orderBy('createdAt', 'desc')); // Newest first
+                // Removed orderBy to avoid needing a composite index. Sorting is now done client-side.
+                const q = query(ordersCollectionRef); 
                 const querySnapshot = await getDocs(q);
                 
                 allOrders = []; // Reset the global orders array
 
-                if (querySnapshot.empty) {
-                    ordersTableBody.innerHTML = `<tr><td colspan="5" class="text-center p-8 text-slate-500">No orders found.</td></tr>`;
-                    exportAllBtn.disabled = true;
-                    return;
-                }
-
-                ordersTableBody.innerHTML = ''; // Clear loading state
-                
                 querySnapshot.forEach(doc => {
                     const order = doc.data();
-                    order.id = doc.id; // Keep track of the document ID
-                    allOrders.push(order); // Store order for global export
-                    
-                    const tr = document.createElement('tr');
-                    tr.className = "hover:bg-slate-50";
-
-                    const orderDate = order.createdAt?.toDate ? order.createdAt.toDate().toLocaleString('tr-TR') : 'N/A';
-                    
-                    tr.innerHTML = `
-                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-slate-900">${order.companyName}</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-500">${order.phoneNumber}</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-500">${order.total.toFixed(2)} ${order.currency || 'TL'}</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-500">${orderDate}</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                            <button class="view-details-btn text-indigo-600 hover:text-indigo-900">View Details</button>
-                        </td>
-                    `;
-                    
-                    const viewBtn = tr.querySelector('.view-details-btn');
-                    viewBtn.addEventListener('click', () => showOrderDetails(order));
-                    
-                    ordersTableBody.appendChild(tr);
+                    order.id = doc.id; 
+                    allOrders.push(order);
                 });
 
-                if (allOrders.length > 0) {
-                    exportAllBtn.disabled = false;
-                }
+                // Sort orders by date client-side (newest first)
+                allOrders.sort((a, b) => {
+                    const dateA = a.createdAt?.toMillis() || 0;
+                    const dateB = b.createdAt?.toMillis() || 0;
+                    return dateB - dateA;
+                });
+
+                renderStats();
+                renderOrders();
 
             } catch (error) {
                 console.error("Error fetching orders: ", error);
-                ordersTableBody.innerHTML = `<tr><td colspan="5" class="text-center p-8 text-red-500">Failed to load orders.</td></tr>`;
+                ordersTableBody.innerHTML = `<tr><td colspan="6" class="text-center p-8 text-red-500">Failed to load orders. Please try again.</td></tr>`;
             }
+        }
+
+        // --- Data Rendering ---
+        function renderStats() {
+            const totalRevenue = allOrders.reduce((sum, order) => sum + order.total, 0);
+            const totalOrders = allOrders.length;
+            const averageOrderValue = totalOrders > 0 ? totalRevenue / totalOrders : 0;
+
+            const stats = [
+                { 
+                    label: 'Total Revenue', 
+                    value: `${totalRevenue.toLocaleString('tr-TR', { style: 'currency', currency: 'TRY' })}`, 
+                    icon: `<svg class="h-8 w-8 text-green-500" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" x2="12" y1="2" y2="22"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>`
+                },
+                { 
+                    label: 'Total Orders', 
+                    value: totalOrders, 
+                    icon: `<svg class="h-8 w-8 text-blue-500" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>` 
+                },
+                { 
+                    label: 'Average Order', 
+                    value: `${averageOrderValue.toLocaleString('tr-TR', { style: 'currency', currency: 'TRY' })}`, 
+                    icon: `<svg class="h-8 w-8 text-yellow-500" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10h-6"/><path d="m21 16-4-4 4-4"/><path d="M3 6h12"/><path d="M3 12h12"/><path d="M3 18h12"/></svg>` 
+                }
+            ];
+
+            statsCardsContainer.innerHTML = stats.map(stat => `
+                <div class="bg-white p-6 rounded-2xl shadow-lg flex items-center justify-between">
+                    <div>
+                        <p class="text-sm font-medium text-slate-500">${stat.label}</p>
+                        <p class="text-3xl font-bold text-slate-900 mt-1">${stat.value}</p>
+                    </div>
+                    <div class="bg-slate-100 p-4 rounded-full">
+                        ${stat.icon}
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function renderOrders() {
+            if (allOrders.length === 0) {
+                ordersTableBody.innerHTML = `<tr><td colspan="6" class="text-center p-8 text-slate-500">No orders found.</td></tr>`;
+                exportAllBtn.disabled = true;
+                return;
+            }
+
+            ordersTableBody.innerHTML = ''; // Clear table
+            
+            allOrders.forEach(order => {
+                const tr = document.createElement('tr');
+                tr.className = "hover:bg-slate-50 transition-colors";
+
+                const orderDate = order.createdAt?.toDate ? order.createdAt.toDate().toLocaleString('tr-TR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : 'N/A';
+                const status = order.status || 'pending';
+
+                const statusOptions = `
+                    <option value="pending" ${status === 'pending' ? 'selected' : ''}>Pending</option>
+                    <option value="processed" ${status === 'processed' ? 'selected' : ''}>Processed</option>
+                `;
+                
+                const statusClasses = {
+                    pending: 'bg-yellow-100 text-yellow-800 border-yellow-200',
+                    processed: 'bg-green-100 text-green-800 border-green-200',
+                };
+                
+                tr.innerHTML = `
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-slate-900">${order.companyName}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-500">${order.phoneNumber}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-500 font-semibold">${order.total.toLocaleString('tr-TR', { style: 'currency', currency: 'TRY' })}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-500">${orderDate}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm">
+                         <select data-order-id="${order.id}" class="status-select text-xs font-semibold rounded-full px-3 py-1 border focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors ${statusClasses[status]}">
+                            ${statusOptions}
+                        </select>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                        <button class="view-details-btn text-indigo-600 hover:text-indigo-900 font-semibold">View Details</button>
+                    </td>
+                `;
+                
+                const viewBtn = tr.querySelector('.view-details-btn');
+                viewBtn.addEventListener('click', () => showOrderDetails(order));
+                
+                ordersTableBody.appendChild(tr);
+
+                const statusSelect = tr.querySelector('.status-select');
+                statusSelect.addEventListener('change', (e) => {
+                    const newStatus = e.target.value;
+                    const orderId = e.target.dataset.orderId;
+                    
+                    // Update the select element's class to reflect the new status color immediately
+                    e.target.className = 'status-select text-xs font-semibold rounded-full px-3 py-1 border focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors ';
+                    e.target.classList.add(...statusClasses[newStatus].split(' '));
+
+                    updateOrderStatus(orderId, newStatus);
+                });
+
+            });
+
+            // Re-enable the 'View Details' buttons functionality here if needed, or ensure it is handled within the loop.
+            // The current implementation correctly handles it inside the loop.
+
+            exportAllBtn.disabled = false;
         }
 
         // --- UI Logic for Modal ---
         function showOrderDetails(order) {
-            modalTitle.textContent = `Order Details for: ${order.companyName}`;
+            modalTitle.textContent = `Order: ${order.companyName}`;
             
-            let itemsHtml = '<table class="min-w-full divide-y divide-slate-200">';
+            let itemsHtml = `<div class="space-y-2 mb-6">
+                <p><strong>Phone:</strong> ${order.phoneNumber}</p>
+                <p><strong>Date:</strong> ${order.createdAt?.toDate ? order.createdAt.toDate().toLocaleString('tr-TR') : 'N/A'}</p>
+            </div>
+            <table class="min-w-full divide-y divide-slate-200">`;
             itemsHtml += `<thead class="bg-slate-50"><tr>
                 <th class="px-4 py-2 text-left text-xs font-medium text-slate-500 uppercase">Product</th>
                 <th class="px-4 py-2 text-left text-xs font-medium text-slate-500 uppercase">Quantity</th>
                 <th class="px-4 py-2 text-left text-xs font-medium text-slate-500 uppercase">Unit Price</th>
-                <th class="px-4 py-2 text-left text-xs font-medium text-slate-500 uppercase">Subtotal</th>
-            </tr></thead><tbody>`;
+                <th class="px-4 py-2 text-right text-xs font-medium text-slate-500 uppercase">Subtotal</th>
+            </tr></thead><tbody class="divide-y divide-slate-200">`;
             
             for (const itemId in order.cart) {
                 const item = order.cart[itemId];
                 const unitPrice = (item.koliFiyat && item.koliFiyat > 0) ? item.koliFiyat : item.price;
                 const subtotal = item.quantity * unitPrice;
                 itemsHtml += `<tr>
-                    <td class="px-4 py-2 text-sm font-medium">${item.name}</td>
-                    <td class="px-4 py-2 text-sm">${item.quantity}</td>
-                    <td class="px-4 py-2 text-sm">${unitPrice.toFixed(2)}</td>
-                    <td class="px-4 py-2 text-sm">${subtotal.toFixed(2)}</td>
+                    <td class="px-4 py-3 text-sm font-medium">${item.name}</td>
+                    <td class="px-4 py-3 text-sm">${item.quantity}</td>
+                    <td class="px-4 py-3 text-sm">${unitPrice.toLocaleString('tr-TR', { style: 'currency', currency: 'TRY' })}</td>
+                    <td class="px-4 py-3 text-sm text-right font-medium">${subtotal.toLocaleString('tr-TR', { style: 'currency', currency: 'TRY' })}</td>
                 </tr>`;
             }
-            
-            itemsHtml += `</tbody></table>`;
+             itemsHtml += `</tbody>
+             <tfoot>
+                <tr class="bg-slate-50">
+                    <td colspan="3" class="px-4 py-3 text-right font-bold text-slate-700">GRAND TOTAL</td>
+                    <td class="px-4 py-3 text-right font-bold text-slate-900 text-lg">${order.total.toLocaleString('tr-TR', { style: 'currency', currency: 'TRY' })}</td>
+                </tr>
+             </tfoot>
+             </table>`;
+
             modalBody.innerHTML = itemsHtml;
             
             exportSingleBtn.onclick = () => exportIndividualOrderToExcel(order);
             detailsModal.classList.remove('opacity-0', 'pointer-events-none');
+            detailsModal.querySelector('.modal-content').classList.remove('opacity-0', 'scale-95');
         }
         
-        closeModalBtn.addEventListener('click', () => {
-            detailsModal.classList.add('opacity-0', 'pointer-events-none');
+        function closeModal() {
+            detailsModal.classList.add('opacity-0');
+            detailsModal.querySelector('.modal-content').classList.add('opacity-0', 'scale-95');
+            setTimeout(() => {
+                detailsModal.classList.add('pointer-events-none');
+            }, 300); // Match transition duration
+        }
+        
+        closeModalBtn.addEventListener('click', closeModal);
+        detailsModal.addEventListener('click', (e) => {
+            if (e.target === detailsModal) {
+                closeModal();
+            }
         });
+
+        // --- Update Order Status ---
+        async function updateOrderStatus(orderId, newStatus) {
+            const ordersCollectionPath = `/artifacts/${appId}/public/data/orders`;
+            const orderRef = doc(db, ordersCollectionPath, orderId);
+            try {
+                await updateDoc(orderRef, {
+                    status: newStatus
+                });
+                const orderInState = allOrders.find(o => o.id === orderId);
+                if (orderInState) {
+                    orderInState.status = newStatus;
+                }
+            } catch (error) {
+                console.error("Error updating order status: ", error);
+                // Revert UI on failure by refetching
+                fetchAndDisplayOrders(); 
+            }
+        }
 
         // --- Excel Export Logic ---
         function exportIndividualOrderToExcel(order) {
@@ -290,6 +493,8 @@
             worksheetData.push([], ["", "", "Grand Total:", order.total.toFixed(2)]);
             
             const ws = XLSX.utils.aoa_to_sheet(worksheetData);
+            // Set column widths
+            ws['!cols'] = [{wch:30}, {wch:10}, {wch:15}, {wch:15}]; 
             const wb = XLSX.utils.book_new();
             XLSX.utils.book_append_sheet(wb, ws, "Order Details");
             XLSX.writeFile(wb, `Order_${companyName.replace(/\s+/g, '_')}.xlsx`);
@@ -314,6 +519,7 @@
             });
 
             const ws = XLSX.utils.aoa_to_sheet(worksheetData);
+            ws['!cols'] = [{wch:25}, {wch:25}, {wch:15}, {wch:20}, {wch:30}, {wch:10}, {wch:15}, {wch:15}];
             const wb = XLSX.utils.book_new();
             XLSX.utils.book_append_sheet(wb, ws, "All Orders");
             const date = new Date().toISOString().slice(0, 10); // YYYY-MM-DD
